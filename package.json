@@ -1,0 +1,16 @@
+{
+  "name": "flappy-bird-pixijs",
+  "version": "0.0.1",
+  "description": "",
+  "main": "entry.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch entry.ts --exec 'tsc --outDir output' entry.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/pixi.js": "^4.5.3"
+  }
+}
