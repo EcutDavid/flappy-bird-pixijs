@@ -1,7 +1,7 @@
 const canvasWidthHeight = Math.min(Math.min(window.innerHeight, window.innerWidth), 512);
-const renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight);
+const renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight, { backgroundColor: 0xc1c2c4 });
 const GRAVITY = 9.8;
-const GAME_SPEED_X = 25;
+const GAME_SPEED_X = 40;
 
 let started = false;
 const startButton = document.querySelector('#start');
@@ -41,9 +41,11 @@ type Rectangle = {
 class Bird {
   private speedY: number = 0;
   private sprite = new PIXI.Sprite();
+  private isDied: boolean;
   
   private textureCounter: number = 0;
   private updateTexture = () => {
+    if (this.isDied) return;
     this.sprite.texture = PIXI.loader.resources[birdFrameList[this.textureCounter++]].texture;
     
     if (this.textureCounter === birdFrameList.length) this.textureCounter = 0;
@@ -53,22 +55,44 @@ class Bird {
     this.speedY += GRAVITY / 70;
     this.sprite.y += this.speedY;
     this.sprite.rotation = Math.atan(this.speedY / GAME_SPEED_X);
+
+    let isCollide = false;
+    this.tubeList.forEach(d => {
+      const { x, y, width, height } = this.sprite;
+      if(d.checkCollision({ x: x - width / 2, y: y - height / 2, width, height })) {
+        isCollide = true;
+      }
+    });
+    if (this.sprite.y < -this.sprite.height / 2 || this.sprite.y > canvasWidthHeight + this.sprite.height / 2) {
+      isCollide = true;
+    }
+
+    if (isCollide) {
+      this.onCollision();
+      this.isDied = true;
+    }
   }
 
   addSpeed(speedInc: number) {
     this.speedY += speedInc;
     this.speedY = Math.max(-GRAVITY, this.speedY);
   }
+
+  reset() {
+    this.sprite.x = canvasWidthHeight / 6;
+    this.sprite.y = canvasWidthHeight / 2.5;
+    this.isDied = false;
+  }
   
-  constructor(stage: PIXI.Container, tubeList: Tube[], onCollision: () => void) {
+  constructor(stage: PIXI.Container, readonly tubeList: Tube[], readonly onCollision: () => void) {
     stage.addChild(this.sprite);
     this.sprite.anchor.set(0.5, 0.5);
     this.updateTexture();
-    this.sprite.scale.x = 0.08;
-    this.sprite.scale.y = 0.08;
-    
-    this.sprite.x = canvasWidthHeight / 6;
-    this.sprite.y = canvasWidthHeight / 2.5;
+    this.sprite.scale.x = 0.06;
+    this.sprite.scale.y = 0.06;
+
+    this.reset();
+
     document.addEventListener('keydown', e => {
       if (e.keyCode == 32) this.addSpeed(-GRAVITY / 3);
     });
@@ -92,6 +116,16 @@ class Tube {
     const tubeMinHeight = 60;
     const randomNum = Math.random() * (canvasWidthHeight - 2 * tubeMinHeight - this.innerDistance);
     this.y = tubeMinHeight + randomNum;
+  }
+
+  checkCollision({x, y, width, height}: Rectangle) {
+    if (!(x + width < this.x || this.x + this.tubeWidth < x || this.y < y)) {
+      return true;
+    }
+    if (!(x + width < this.x || this.x + this.tubeWidth < x || y + height < this.y + this.innerDistance)) {
+      return true;
+    } 
+    return false;
   }
 
   update() {
@@ -143,6 +177,3 @@ function draw() {
   renderer.render(stage);
   requestAnimationFrame(draw);
 }
-
-
-
