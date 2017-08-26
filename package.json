@@ -5,7 +5,8 @@
   "main": "entry.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch entry.ts --exec 'tsc --outDir output' entry.ts"
+    "dev": "nodemon --watch entry.ts --exec 'tsc --outDir output' entry.ts",
+    "browser-sync": "browser-sync start --server --files output/*"
   },
   "keywords": [],
   "author": "",
