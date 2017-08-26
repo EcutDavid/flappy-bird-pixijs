@@ -5,7 +5,10 @@ const GAME_SPEED_X = 5;
 
 let started = false;
 const startButton = document.querySelector('#start');
-startButton.addEventListener('click', () => started = true);
+startButton.addEventListener('click', () => {
+  started = true;
+  startButton.classList.add('hide');
+});
 
 // Add the canvas to the HTML document
 document.body.appendChild(renderer.view);

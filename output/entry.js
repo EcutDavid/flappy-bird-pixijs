@@ -4,7 +4,10 @@ var GRAVITY = 9.8;
 var GAME_SPEED_X = 5;
 var started = false;
 var startButton = document.querySelector('#start');
-startButton.addEventListener('click', function () { return started = true; });
+startButton.addEventListener('click', function () {
+    started = true;
+    startButton.classList.add('hide');
+});
 // Add the canvas to the HTML document
 document.body.appendChild(renderer.view);
 // Create a container object called the `stage`
