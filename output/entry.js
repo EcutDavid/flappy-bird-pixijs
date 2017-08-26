@@ -1,10 +1,10 @@
-// Optional configuration
-// {antialias: boolean, transparent: boolean, resolution: number}
-var renderer = PIXI.autoDetectRenderer(512, 512);
+var stageWidthHeight = Math.min(Math.min(window.innerHeight, window.innerHeight), 512);
+var renderer = PIXI.autoDetectRenderer(stageWidthHeight, stageWidthHeight);
 var GRAVITY = 9.8;
 var GAME_SPEED_X = 5;
-// renderer.autoResize = true;
-// renderer.resize(512, 512);
+var started = false;
+var startButton = document.querySelector('#start');
+startButton.addEventListener('click', function () { return started = true; });
 // Add the canvas to the HTML document
 document.body.appendChild(renderer.view);
 // Create a container object called the `stage`
@@ -43,7 +43,8 @@ var Bird = (function () {
         stage.addChild(this.sprite);
         this.sprite.scale.x = 0.1;
         this.sprite.scale.y = 0.1;
-        this.sprite.x = 50;
+        this.sprite.x = stageWidthHeight / 6;
+        this.sprite.y = stageWidthHeight / 2.5;
         document.addEventListener('keydown', function (e) {
             // handle space
             if (e.keyCode == 32)
@@ -51,7 +52,6 @@ var Bird = (function () {
         });
         stage.on('pointerdown', function () { return _this.addSpeed(-GRAVITY / 3); });
         setInterval(this.updateTexture, 200);
-        setInterval(this.updateSprite, 1000 / 60);
     }
     Bird.prototype.addSpeed = function (speedInc) {
         this.speedY += speedInc;
@@ -59,11 +59,15 @@ var Bird = (function () {
     };
     return Bird;
 }());
+var bird;
 function setup() {
-    var bird = new Bird(stage);
+    bird = new Bird(stage);
     requestAnimationFrame(draw);
 }
 function draw() {
+    if (started) {
+        bird.updateSprite();
+    }
     renderer.render(stage);
     requestAnimationFrame(draw);
 }

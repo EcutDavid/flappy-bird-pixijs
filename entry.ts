@@ -1,10 +1,11 @@
-// Optional configuration
-// {antialias: boolean, transparent: boolean, resolution: number}
-const renderer = PIXI.autoDetectRenderer(512, 512);
+const stageWidthHeight = Math.min(Math.min(window.innerHeight, window.innerHeight), 512);
+const renderer = PIXI.autoDetectRenderer(stageWidthHeight, stageWidthHeight);
 const GRAVITY = 9.8;
 const GAME_SPEED_X = 5;
-// renderer.autoResize = true;
-// renderer.resize(512, 512);
+
+let started = false;
+const startButton = document.querySelector('#start');
+startButton.addEventListener('click', () => started = true);
 
 // Add the canvas to the HTML document
 document.body.appendChild(renderer.view);
@@ -39,7 +40,7 @@ class Bird {
     if (this.textureCounter === birdFrameList.length) this.textureCounter = 0;
   }
 
-  private updateSprite = () => {
+  updateSprite = () => {
     this.speedY += GRAVITY / 70;
     this.sprite.y += this.speedY;
     this.sprite.anchor.set(0.5, 0.5);
@@ -55,7 +56,8 @@ class Bird {
     stage.addChild(this.sprite);
     this.sprite.scale.x = 0.1;
     this.sprite.scale.y = 0.1;
-    this.sprite.x = 50;
+    this.sprite.x = stageWidthHeight / 6;
+    this.sprite.y = stageWidthHeight / 2.5;
 
     document.addEventListener('keydown', e => {
       // handle space
@@ -64,16 +66,18 @@ class Bird {
     stage.on('pointerdown', () => this.addSpeed(-GRAVITY / 3))
 
     setInterval(this.updateTexture, 200);
-    setInterval(this.updateSprite, 1000 / 60);
   }
 }
-
+let bird;
 function setup() {
-  const bird = new Bird(stage);
+  bird = new Bird(stage);
   requestAnimationFrame(draw);
 }
 
 function draw() {
+  if(started) {
+    bird.updateSprite();
+  }
   renderer.render(stage);
   requestAnimationFrame(draw);
 }
