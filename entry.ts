@@ -1,7 +1,7 @@
-const stageWidthHeight = Math.min(Math.min(window.innerHeight, window.innerHeight), 512);
-const renderer = PIXI.autoDetectRenderer(stageWidthHeight, stageWidthHeight);
+const canvasWidthHeight = Math.min(Math.min(window.innerHeight, window.innerWidth), 512);
+const renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight);
 const GRAVITY = 9.8;
-const GAME_SPEED_X = 5;
+const GAME_SPEED_X = 25;
 
 let started = false;
 const startButton = document.querySelector('#start');
@@ -31,6 +31,12 @@ PIXI.loader
   .load(setup);
 
 let counter = 0;
+type Rectangle = {
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
 
 class Bird {
   private speedY: number = 0;
@@ -46,7 +52,6 @@ class Bird {
   updateSprite = () => {
     this.speedY += GRAVITY / 70;
     this.sprite.y += this.speedY;
-    this.sprite.anchor.set(0.5, 0.5);
     this.sprite.rotation = Math.atan(this.speedY / GAME_SPEED_X);
   }
 
@@ -55,15 +60,16 @@ class Bird {
     this.speedY = Math.max(-GRAVITY, this.speedY);
   }
   
-  constructor(stage: PIXI.Container) {
+  constructor(stage: PIXI.Container, tubeList: Tube[], onCollision: () => void) {
     stage.addChild(this.sprite);
-    this.sprite.scale.x = 0.1;
-    this.sprite.scale.y = 0.1;
-    this.sprite.x = stageWidthHeight / 6;
-    this.sprite.y = stageWidthHeight / 2.5;
-
+    this.sprite.anchor.set(0.5, 0.5);
+    this.updateTexture();
+    this.sprite.scale.x = 0.08;
+    this.sprite.scale.y = 0.08;
+    
+    this.sprite.x = canvasWidthHeight / 6;
+    this.sprite.y = canvasWidthHeight / 2.5;
     document.addEventListener('keydown', e => {
-      // handle space
       if (e.keyCode == 32) this.addSpeed(-GRAVITY / 3);
     });
     stage.on('pointerdown', () => this.addSpeed(-GRAVITY / 3))
@@ -71,15 +77,68 @@ class Bird {
     setInterval(this.updateTexture, 200);
   }
 }
+
+class Tube {
+  private x: number;
+  private y: number;
+  private innerDistance = 80;
+  private tubeWidth = 20;
+  
+  private sprite = new PIXI.Graphics();
+
+  reset(x: number = canvasWidthHeight + 20) {
+    this.x = x;
+    
+    const tubeMinHeight = 60;
+    const randomNum = Math.random() * (canvasWidthHeight - 2 * tubeMinHeight - this.innerDistance);
+    this.y = tubeMinHeight + randomNum;
+  }
+
+  update() {
+    this.x -= GAME_SPEED_X / 60;
+    if (this.x < -this.tubeWidth) this.reset();
+    
+    this.sprite.clear();
+    this.sprite.beginFill(0xffffff, 1);
+    this.sprite.drawRect(
+      this.x,
+      0,
+      this.tubeWidth,
+      this.y
+    );
+    this.sprite.drawRect(
+      this.x,
+      this.y + this.innerDistance,
+      this.tubeWidth,
+      canvasWidthHeight
+    );
+    this.sprite.endFill();
+  }
+
+  constructor(stage: PIXI.Container, x: number) {
+    stage.addChild(this.sprite);
+    this.reset(x);
+  }
+}
+
+const tubeYList = [
+  canvasWidthHeight + 50, 
+  canvasWidthHeight + 250,
+  canvasWidthHeight + 480
+];
+const tubeList = tubeYList.map(d => new Tube(stage, d));
 let bird;
+
 function setup() {
-  bird = new Bird(stage);
+  bird = new Bird(stage, tubeList, () => gameFailed = true);
   requestAnimationFrame(draw);
 }
 
+let gameFailed = false;
 function draw() {
   if(started) {
     bird.updateSprite();
+    if (!gameFailed) tubeList.forEach(d => d.update());
   }
   renderer.render(stage);
   requestAnimationFrame(draw);
