@@ -12,18 +12,6 @@ var TUBE_POS_LIST = [
     canvasWidthHeight + 250,
     canvasWidthHeight + 480
 ];
-var renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight, { backgroundColor: 0xc1c2c4 });
-// Add the canvas to the HTML document
-document.body.appendChild(renderer.view);
-// Create a container object called the `stage`
-var stage = new PIXI.Container();
-stage.interactive = true;
-stage.hitArea = new PIXI.Rectangle(0, 0, 1000, 1000);
-renderer.render(stage);
-PIXI.loader
-    .add(BIRD_FRAME_LIST)
-    .load(setup);
-var counter = 0;
 var Bird = (function () {
     function Bird(stage, tubeList, onCollision) {
         var _this = this;
@@ -46,13 +34,12 @@ var Bird = (function () {
             var isCollide = false;
             _this.tubeList.forEach(function (d) {
                 var _a = _this.sprite, x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-                if (d.checkCollision({ x: x - width / 2, y: y - height / 2, width: width, height: height })) {
+                if (d.checkCollision(x - width / 2, y - height / 2, width, height))
                     isCollide = true;
-                }
             });
-            if (_this.sprite.y < -_this.sprite.height / 2 || _this.sprite.y > canvasWidthHeight + _this.sprite.height / 2) {
+            if (_this.sprite.y < -_this.sprite.height / 2 ||
+                _this.sprite.y > canvasWidthHeight + _this.sprite.height / 2)
                 isCollide = true;
-            }
             if (isCollide) {
                 _this.onCollision();
                 _this.isDied = true;
@@ -98,8 +85,7 @@ var Tube = (function () {
         var randomNum = Math.random() * (canvasWidthHeight - 2 * tubeMinHeight - this.innerDistance);
         this.y = tubeMinHeight + randomNum;
     };
-    Tube.prototype.checkCollision = function (_a) {
-        var x = _a.x, y = _a.y, width = _a.width, height = _a.height;
+    Tube.prototype.checkCollision = function (x, y, width, height) {
         if (!(x + width < this.x || this.x + this.tubeWidth < x || this.y < y)) {
             return true;
         }
@@ -120,19 +106,30 @@ var Tube = (function () {
     };
     return Tube;
 }());
+var renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight, { backgroundColor: 0xc1c2c4 });
+document.body.appendChild(renderer.view);
+var stage = new PIXI.Container();
+stage.interactive = true;
+stage.hitArea = new PIXI.Rectangle(0, 0, 1000, 1000);
+renderer.render(stage);
+PIXI.loader
+    .add(BIRD_FRAME_LIST)
+    .load(setup);
 var tubeList = TUBE_POS_LIST.map(function (d) { return new Tube(stage, d); });
 var bird;
+var button = document.querySelector('#start');
 function setup() {
     bird = new Bird(stage, tubeList, function () {
+        // Called when bird hit tube/ground/upper bound
         gameFailed = true;
-        startButton.classList.remove('hide');
+        button.classList.remove('hide');
     });
     requestAnimationFrame(draw);
 }
-var started = false;
+var gameStarted = false;
 var gameFailed = false;
 function draw() {
-    if (started) {
+    if (gameStarted) {
         bird.updateSprite();
         if (!gameFailed)
             tubeList.forEach(function (d) { return d.update(); });
@@ -140,14 +137,13 @@ function draw() {
     renderer.render(stage);
     requestAnimationFrame(draw);
 }
-var startButton = document.querySelector('#start');
-startButton.addEventListener('click', function () {
-    started = true;
-    startButton.innerHTML = 'Retry';
+button.addEventListener('click', function () {
+    gameStarted = true;
+    button.innerHTML = 'Retry';
     if (gameFailed) {
-        tubeList.forEach(function (d, i) { return d.reset(TUBE_POS_LIST[i]); });
         gameFailed = false;
+        tubeList.forEach(function (d, i) { return d.reset(TUBE_POS_LIST[i]); });
         bird.reset();
     }
-    startButton.classList.add('hide');
+    button.classList.add('hide');
 });
