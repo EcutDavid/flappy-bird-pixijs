@@ -1,42 +1,38 @@
 const canvasWidthHeight = Math.min(Math.min(window.innerHeight, window.innerWidth), 512);
-const renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight, { backgroundColor: 0xc1c2c4 });
 const GRAVITY = 9.8;
 const GAME_SPEED_X = 40;
-
-let started = false;
-const startButton = document.querySelector('#start');
-startButton.addEventListener('click', () => {
-  started = true;
-  startButton.classList.add('hide');
-});
-
-// Add the canvas to the HTML document
-document.body.appendChild(renderer.view);
-
-// Create a container object called the `stage`
-const stage = new PIXI.Container();
-stage.interactive = true;
-stage.hitArea = new PIXI.Rectangle(0, 0, 1000, 1000);
-renderer.render(stage);
-
-const imagePath = './images/canva.jpg';
-const birdFrameList = [
+const BIRD_FRAME_LIST = [
   './images/frame-1.png',
   './images/frame-2.png',
   './images/frame-3.png',
   './images/frame-4.png',
 ];
-PIXI.loader
-  .add(birdFrameList)
-  .load(setup);
-
-let counter = 0;
+const TUBE_POS_LIST = [
+  canvasWidthHeight + 50,
+  canvasWidthHeight + 250,
+  canvasWidthHeight + 480
+];
 type Rectangle = {
   x: number;
   y: number;
   height: number;
   width: number;
 }
+
+const renderer = PIXI.autoDetectRenderer(canvasWidthHeight, canvasWidthHeight, { backgroundColor: 0xc1c2c4 });
+// Add the canvas to the HTML document
+document.body.appendChild(renderer.view);
+// Create a container object called the `stage`
+const stage = new PIXI.Container();
+stage.interactive = true;
+stage.hitArea = new PIXI.Rectangle(0, 0, 1000, 1000);
+renderer.render(stage);
+
+PIXI.loader
+  .add(BIRD_FRAME_LIST)
+  .load(setup);
+
+let counter = 0;
 
 class Bird {
   private speedY: number = 0;
@@ -46,9 +42,9 @@ class Bird {
   private textureCounter: number = 0;
   private updateTexture = () => {
     if (this.isDied) return;
-    this.sprite.texture = PIXI.loader.resources[birdFrameList[this.textureCounter++]].texture;
+    this.sprite.texture = PIXI.loader.resources[BIRD_FRAME_LIST[this.textureCounter++]].texture;
     
-    if (this.textureCounter === birdFrameList.length) this.textureCounter = 0;
+    if (this.textureCounter === BIRD_FRAME_LIST.length) this.textureCounter = 0;
   }
 
   updateSprite = () => {
@@ -81,6 +77,7 @@ class Bird {
   reset() {
     this.sprite.x = canvasWidthHeight / 6;
     this.sprite.y = canvasWidthHeight / 2.5;
+    this.speedY = 0;
     this.isDied = false;
   }
   
@@ -155,19 +152,18 @@ class Tube {
   }
 }
 
-const tubeYList = [
-  canvasWidthHeight + 50, 
-  canvasWidthHeight + 250,
-  canvasWidthHeight + 480
-];
-const tubeList = tubeYList.map(d => new Tube(stage, d));
+const tubeList = TUBE_POS_LIST.map(d => new Tube(stage, d));
 let bird;
 
 function setup() {
-  bird = new Bird(stage, tubeList, () => gameFailed = true);
+  bird = new Bird(stage, tubeList, () => {
+    gameFailed = true;
+    startButton.classList.remove('hide');
+  });
   requestAnimationFrame(draw);
 }
 
+let started = false;
 let gameFailed = false;
 function draw() {
   if(started) {
@@ -177,3 +173,15 @@ function draw() {
   renderer.render(stage);
   requestAnimationFrame(draw);
 }
+
+const startButton = document.querySelector('#start');
+startButton.addEventListener('click', () => {
+  started = true;
+  startButton.innerHTML = 'Retry';
+  if (gameFailed) {
+    tubeList.forEach((d, i) => d.reset(TUBE_POS_LIST[i]));
+    gameFailed = false;
+    bird.reset();
+  }
+  startButton.classList.add('hide');
+});

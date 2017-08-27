@@ -1,1 +1,1 @@
-# flappy-bird-pixijs
+# simple flappy bird copy
