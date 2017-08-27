@@ -32,13 +32,12 @@ var Bird = (function () {
             _this.sprite.y += _this.speedY;
             _this.sprite.rotation = Math.atan(_this.speedY / GAME_SPEED_X);
             var isCollide = false;
+            var _a = _this.sprite, x = _a.x, y = _a.y, width = _a.width, height = _a.height;
             _this.tubeList.forEach(function (d) {
-                var _a = _this.sprite, x = _a.x, y = _a.y, width = _a.width, height = _a.height;
                 if (d.checkCollision(x - width / 2, y - height / 2, width, height))
                     isCollide = true;
             });
-            if (_this.sprite.y < -_this.sprite.height / 2 ||
-                _this.sprite.y > canvasWidthHeight + _this.sprite.height / 2)
+            if (y < -height / 2 || y > canvasWidthHeight + height / 2)
                 isCollide = true;
             if (isCollide) {
                 _this.onCollision();
@@ -100,8 +99,9 @@ var Tube = (function () {
             this.reset();
         this.sprite.clear();
         this.sprite.beginFill(0xffffff, 1);
-        this.sprite.drawRect(this.x, 0, this.tubeWidth, this.y);
-        this.sprite.drawRect(this.x, this.y + this.innerDistance, this.tubeWidth, canvasWidthHeight);
+        var _a = this, x = _a.x, y = _a.y, tubeWidth = _a.tubeWidth, innerDistance = _a.innerDistance;
+        this.sprite.drawRect(x, 0, tubeWidth, y);
+        this.sprite.drawRect(x, y + innerDistance, tubeWidth, canvasWidthHeight);
         this.sprite.endFill();
     };
     return Tube;
@@ -112,10 +112,10 @@ var stage = new PIXI.Container();
 stage.interactive = true;
 stage.hitArea = new PIXI.Rectangle(0, 0, 1000, 1000);
 renderer.render(stage);
+var tubeList = TUBE_POS_LIST.map(function (d) { return new Tube(stage, d); });
 PIXI.loader
     .add(BIRD_FRAME_LIST)
     .load(setup);
-var tubeList = TUBE_POS_LIST.map(function (d) { return new Tube(stage, d); });
 var bird;
 var button = document.querySelector('#start');
 function setup() {

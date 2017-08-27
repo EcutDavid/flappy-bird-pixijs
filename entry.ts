@@ -32,12 +32,11 @@ class Bird {
     this.sprite.rotation = Math.atan(this.speedY / GAME_SPEED_X);
 
     let isCollide = false;
+    const { x, y, width, height } = this.sprite;
     this.tubeList.forEach(d => {
-      const { x, y, width, height } = this.sprite;
       if (d.checkCollision(x - width / 2, y - height / 2, width, height)) isCollide = true;
     });
-    if (this.sprite.y < -this.sprite.height / 2 || 
-      this.sprite.y > canvasWidthHeight + this.sprite.height / 2) isCollide = true;
+    if (y < -height / 2 || y > canvasWidthHeight + height / 2) isCollide = true;
 
     if (isCollide) {
       this.onCollision();
@@ -106,18 +105,9 @@ class Tube {
 
     this.sprite.clear();
     this.sprite.beginFill(0xffffff, 1);
-    this.sprite.drawRect(
-      this.x,
-      0,
-      this.tubeWidth,
-      this.y
-    );
-    this.sprite.drawRect(
-      this.x,
-      this.y + this.innerDistance,
-      this.tubeWidth,
-      canvasWidthHeight
-    );
+    const { x, y, tubeWidth, innerDistance } = this;
+    this.sprite.drawRect(x, 0, tubeWidth, y);
+    this.sprite.drawRect(x, y + innerDistance, tubeWidth, canvasWidthHeight);
     this.sprite.endFill();
   }
 
@@ -134,11 +124,11 @@ stage.interactive = true;
 stage.hitArea = new PIXI.Rectangle(0, 0, 1000, 1000);
 renderer.render(stage);
 
+const tubeList = TUBE_POS_LIST.map(d => new Tube(stage, d));
 PIXI.loader
   .add(BIRD_FRAME_LIST)
   .load(setup);
 
-const tubeList = TUBE_POS_LIST.map(d => new Tube(stage, d));
 let bird;
 const button = document.querySelector('#start');
 function setup() {
